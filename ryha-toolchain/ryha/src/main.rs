@@ -2,6 +2,7 @@
 
 use ryha::lexer::Lexer;
 use ryha::parser::Parser;
+use ryha::semantic::SemanticAnalyzer;
 use std::io::{self, Read};
 
 fn main() {
@@ -18,6 +19,17 @@ fn main() {
     if !parser.errors().is_empty() {
         eprintln!("Parser errors:");
         for error in parser.errors() {
+            eprintln!("\t{}", error);
+        }
+        return;
+    }
+
+    let mut analyzer = SemanticAnalyzer::new();
+    analyzer.analyze(&program);
+
+    if !analyzer.errors().is_empty() {
+        eprintln!("Semantic errors:");
+        for error in analyzer.errors() {
             eprintln!("\t{}", error);
         }
         return;
