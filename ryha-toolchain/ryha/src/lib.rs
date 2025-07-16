@@ -5,6 +5,7 @@ pub mod codegen;
 pub mod gemini;
 pub mod ir;
 pub mod lexer;
+pub mod obfuscator;
 pub mod optimizer;
 pub mod parser;
 pub mod self_modifier;
@@ -243,5 +244,25 @@ mod tests {
         self_modifier.improve_security();
         let main_rs = std::fs::read_to_string("src/main.rs").unwrap();
         assert!(main_rs.contains("with enhanced security!"));
+    }
+
+    #[test]
+    fn test_obfuscator() {
+        let input = "let x = 5 + 10;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let mut optimizer = crate::optimizer::Optimizer::new();
+        optimizer.optimize(ir_generator.instructions());
+
+        let mut obfuscator = crate::obfuscator::Obfuscator::new();
+        obfuscator.obfuscate(&mut optimizer.instructions().to_vec());
+
+        let instructions = obfuscator.instructions();
+        assert_eq!(instructions.len(), 1);
     }
 }

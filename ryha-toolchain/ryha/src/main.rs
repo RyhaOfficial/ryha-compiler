@@ -4,6 +4,7 @@ use ryha::codegen::CodeGenerator;
 use ryha::gemini::GeminiClient;
 use ryha::ir::IRGenerator;
 use ryha::lexer::Lexer;
+use ryha::obfuscator::Obfuscator;
 use ryha::optimizer::Optimizer;
 use ryha::parser::Parser;
 use ryha::self_modifier::SelfModifier;
@@ -22,7 +23,7 @@ async fn main() {
         let voice_command_parser = VoiceCommandParser::new();
         let command = voice_command_parser.parse(&args[2]);
         if command == Some("build".to_string()) {
-            build();
+            build(false);
         } else if command == Some("improve security".to_string()) {
             let self_modifier = SelfModifier::new();
             self_modifier.improve_security();
@@ -39,12 +40,14 @@ async fn main() {
     } else if args.len() > 1 && args[1] == "--ide" {
         let ide_path = std::env::var("CARGO_BIN_EXE_ide").unwrap();
         Command::new(ide_path).status().unwrap();
+    } else if args.len() > 1 && args[1] == "--obfuscate" {
+        build(true);
     } else {
-        build();
+        build(false);
     }
 }
 
-fn build() {
+fn build(obfuscate: bool) {
     let mut input = String::new();
     if io::stdin().read_to_string(&mut input).is_err() {
         eprintln!("Failed to read from stdin");
@@ -80,8 +83,16 @@ fn build() {
     let mut optimizer = Optimizer::new();
     optimizer.optimize(ir_generator.instructions());
 
+    let instructions = if obfuscate {
+        let mut obfuscator = Obfuscator::new();
+        obfuscator.obfuscate(&mut optimizer.instructions().to_vec());
+        obfuscator.instructions().to_vec()
+    } else {
+        optimizer.instructions().to_vec()
+    };
+
     let mut codegen = CodeGenerator::new();
-    codegen.generate(optimizer.instructions());
+    codegen.generate(&instructions);
 
     let mut asm_file = NamedTempFile::new().unwrap();
     asm_file.write_all(codegen.assembly().as_bytes()).unwrap();
