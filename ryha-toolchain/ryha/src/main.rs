@@ -1,5 +1,6 @@
 // ryha-toolchain/ryha/src/main.rs
 
+use ryha::codegen::CodeGenerator;
 use ryha::ir::IRGenerator;
 use ryha::lexer::Lexer;
 use ryha::parser::Parser;
@@ -39,5 +40,8 @@ fn main() {
     let mut ir_generator = IRGenerator::new();
     ir_generator.generate(&program);
 
-    println!("{:#?}", ir_generator.instructions());
+    let mut codegen = CodeGenerator::new();
+    codegen.generate(ir_generator.instructions());
+
+    println!("{}", codegen.assembly());
 }

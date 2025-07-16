@@ -1,6 +1,7 @@
 // ryha-toolchain/ryha/src/lib.rs
 
 pub mod ast;
+pub mod codegen;
 pub mod ir;
 pub mod lexer;
 pub mod parser;
@@ -62,5 +63,21 @@ mod tests {
                 crate::ir::Operand::Immediate(5)
             )
         );
+    }
+
+    #[test]
+    fn test_codegen() {
+        let input = "let x = 5;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let mut codegen = crate::codegen::CodeGenerator::new();
+        codegen.generate(ir_generator.instructions());
+
+        assert_eq!(codegen.assembly(), "mov r0, 5\n");
     }
 }
