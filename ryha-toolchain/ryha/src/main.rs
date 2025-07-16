@@ -1,6 +1,7 @@
 // ryha-toolchain/ryha/src/main.rs
 
 use ryha::codegen::CodeGenerator;
+use ryha::gemini::GeminiClient;
 use ryha::ir::IRGenerator;
 use ryha::lexer::Lexer;
 use ryha::optimizer::Optimizer;
@@ -13,7 +14,8 @@ use std::io::{self, Read, Write};
 use std::process::Command;
 use tempfile::NamedTempFile;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 && args[1] == "--voice" {
         let voice_command_parser = VoiceCommandParser::new();
@@ -23,6 +25,12 @@ fn main() {
         } else {
             eprintln!("Invalid voice command");
         }
+    } else if args.len() > 1 && args[1] == "--explain" {
+        let api_key = env::var("GEMINI_API_KEY").expect("GEMINI_API_KEY not set");
+        let client = GeminiClient::new(api_key);
+        let error = &args[2];
+        let explanation = client.explain(error).await.unwrap();
+        println!("{}", explanation);
     } else {
         build();
     }

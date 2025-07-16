@@ -2,6 +2,7 @@
 
 pub mod ast;
 pub mod codegen;
+pub mod gemini;
 pub mod ir;
 pub mod lexer;
 pub mod optimizer;
@@ -226,5 +227,12 @@ mod tests {
         let parser = crate::voice::VoiceCommandParser::new();
         assert_eq!(parser.parse("build"), Some("build".to_string()));
         assert_eq!(parser.parse("test"), None);
+    }
+
+    #[tokio::test]
+    async fn test_gemini_client() {
+        let client = crate::gemini::GeminiClient::new("test_api_key".to_string());
+        let explanation = client.explain("test error").await;
+        assert!(explanation.is_err());
     }
 }
