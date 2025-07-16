@@ -6,6 +6,7 @@ use ryha::ir::IRGenerator;
 use ryha::lexer::Lexer;
 use ryha::optimizer::Optimizer;
 use ryha::parser::Parser;
+use ryha::self_modifier::SelfModifier;
 use ryha::semantic::SemanticAnalyzer;
 use ryha::voice::VoiceCommandParser;
 use std::env;
@@ -22,6 +23,10 @@ async fn main() {
         let command = voice_command_parser.parse(&args[2]);
         if command == Some("build".to_string()) {
             build();
+        } else if command == Some("improve security".to_string()) {
+            let self_modifier = SelfModifier::new();
+            self_modifier.improve_security();
+            println!("Security improved!");
         } else {
             eprintln!("Invalid voice command");
         }
@@ -107,5 +112,5 @@ fn build() {
         return;
     }
 
-    println!("Successfully compiled to {}", output_file);
+    println!("Successfully compiled to {} with enhanced security!", output_file);
 }

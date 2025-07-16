@@ -7,6 +7,7 @@ pub mod ir;
 pub mod lexer;
 pub mod optimizer;
 pub mod parser;
+pub mod self_modifier;
 pub mod semantic;
 pub mod voice;
 
@@ -234,5 +235,13 @@ mod tests {
         let client = crate::gemini::GeminiClient::new("test_api_key".to_string());
         let explanation = client.explain("test error").await;
         assert!(explanation.is_err());
+    }
+
+    #[test]
+    fn test_self_modifier() {
+        let self_modifier = crate::self_modifier::SelfModifier::new();
+        self_modifier.improve_security();
+        let main_rs = std::fs::read_to_string("src/main.rs").unwrap();
+        assert!(main_rs.contains("with enhanced security!"));
     }
 }
