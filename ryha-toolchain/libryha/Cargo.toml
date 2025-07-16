@@ -3,4 +3,8 @@ name = "libryha"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "libryha"
+path = "lib.rs"
+
 [dependencies]

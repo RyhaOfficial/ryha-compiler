@@ -1,0 +1,14 @@
+[package]
+name = "ryha"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "ryha"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ryha"
+path = "src/main.rs"
+
+[dependencies]
