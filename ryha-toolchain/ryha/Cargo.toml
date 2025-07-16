@@ -12,3 +12,4 @@ name = "ryha"
 path = "src/main.rs"
 
 [dependencies]
+tempfile = "3.3.0"
