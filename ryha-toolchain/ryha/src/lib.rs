@@ -4,6 +4,7 @@ pub mod ast;
 pub mod codegen;
 pub mod ir;
 pub mod lexer;
+pub mod optimizer;
 pub mod parser;
 pub mod semantic;
 
@@ -193,5 +194,29 @@ mod tests {
             .expect("Failed to run executable");
 
         assert_eq!(run_output.status.code(), Some(42));
+    }
+
+    #[test]
+    fn test_constant_folding() {
+        let input = "let x = 5 + 10;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let mut optimizer = crate::optimizer::Optimizer::new();
+        optimizer.optimize(ir_generator.instructions());
+
+        let instructions = optimizer.instructions();
+        assert_eq!(instructions.len(), 1);
+        assert_eq!(
+            instructions[0],
+            crate::ir::Instruction::Load(
+                crate::ir::Operand::Register(2),
+                crate::ir::Operand::Immediate(15)
+            )
+        );
     }
 }

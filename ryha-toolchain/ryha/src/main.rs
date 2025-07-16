@@ -3,6 +3,7 @@
 use ryha::codegen::CodeGenerator;
 use ryha::ir::IRGenerator;
 use ryha::lexer::Lexer;
+use ryha::optimizer::Optimizer;
 use ryha::parser::Parser;
 use ryha::semantic::SemanticAnalyzer;
 use std::fs;
@@ -43,8 +44,11 @@ fn main() {
     let mut ir_generator = IRGenerator::new();
     ir_generator.generate(&program);
 
+    let mut optimizer = Optimizer::new();
+    optimizer.optimize(ir_generator.instructions());
+
     let mut codegen = CodeGenerator::new();
-    codegen.generate(ir_generator.instructions());
+    codegen.generate(optimizer.instructions());
 
     let mut asm_file = NamedTempFile::new().unwrap();
     asm_file.write_all(codegen.assembly().as_bytes()).unwrap();
