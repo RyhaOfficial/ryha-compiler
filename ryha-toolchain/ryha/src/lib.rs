@@ -78,6 +78,44 @@ mod tests {
         let mut codegen = crate::codegen::CodeGenerator::new();
         codegen.generate(ir_generator.instructions());
 
-        assert_eq!(codegen.assembly(), "mov r0, 5\n");
+        assert_eq!(codegen.assembly(), ".global main\nmain:\nmov r0, 5\n");
+    }
+
+    #[test]
+    fn test_infix_expression() {
+        let input = "let x = 5 + 10;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let mut codegen = crate::codegen::CodeGenerator::new();
+        codegen.generate(ir_generator.instructions());
+
+        assert_eq!(
+            codegen.assembly(),
+            ".global main\nmain:\nmov r0, 5\nmov r1, 10\nmov r2, r0\nadd r2, r1\n"
+        );
+    }
+
+    #[test]
+    fn test_return_statement() {
+        let input = "return 5;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let mut codegen = crate::codegen::CodeGenerator::new();
+        codegen.generate(ir_generator.instructions());
+
+        assert_eq!(
+            codegen.assembly(),
+            ".global main\nmain:\nmov r0, 5\nmov rax, r0\nret\n"
+        );
     }
 }
