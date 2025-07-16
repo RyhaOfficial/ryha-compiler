@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "ide",
     "libryha",
     "ryha",
     "ryha-as",

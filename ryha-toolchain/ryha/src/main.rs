@@ -36,6 +36,9 @@ async fn main() {
         let error = &args[2];
         let explanation = client.explain(error).await.unwrap();
         println!("{}", explanation);
+    } else if args.len() > 1 && args[1] == "--ide" {
+        let ide_path = std::env::var("CARGO_BIN_EXE_ide").unwrap();
+        Command::new(ide_path).status().unwrap();
     } else {
         build();
     }
