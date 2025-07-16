@@ -6,12 +6,29 @@ use ryha::lexer::Lexer;
 use ryha::optimizer::Optimizer;
 use ryha::parser::Parser;
 use ryha::semantic::SemanticAnalyzer;
+use ryha::voice::VoiceCommandParser;
+use std::env;
 use std::fs;
 use std::io::{self, Read, Write};
 use std::process::Command;
 use tempfile::NamedTempFile;
 
 fn main() {
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 && args[1] == "--voice" {
+        let voice_command_parser = VoiceCommandParser::new();
+        let command = voice_command_parser.parse(&args[2]);
+        if command == Some("build".to_string()) {
+            build();
+        } else {
+            eprintln!("Invalid voice command");
+        }
+    } else {
+        build();
+    }
+}
+
+fn build() {
     let mut input = String::new();
     if io::stdin().read_to_string(&mut input).is_err() {
         eprintln!("Failed to read from stdin");

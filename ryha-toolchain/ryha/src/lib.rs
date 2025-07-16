@@ -7,6 +7,7 @@ pub mod lexer;
 pub mod optimizer;
 pub mod parser;
 pub mod semantic;
+pub mod voice;
 
 use std::io::Write;
 
@@ -218,5 +219,12 @@ mod tests {
                 crate::ir::Operand::Immediate(15)
             )
         );
+    }
+
+    #[test]
+    fn test_voice_command_parser() {
+        let parser = crate::voice::VoiceCommandParser::new();
+        assert_eq!(parser.parse("build"), Some("build".to_string()));
+        assert_eq!(parser.parse("test"), None);
     }
 }
