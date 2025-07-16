@@ -1,6 +1,7 @@
 // ryha-toolchain/ryha/src/lib.rs
 
 pub mod ast;
+pub mod ir;
 pub mod lexer;
 pub mod parser;
 pub mod semantic;
@@ -40,5 +41,26 @@ mod tests {
 
         assert_eq!(analyzer.errors().len(), 1);
         assert_eq!(analyzer.errors()[0], "undefined variable: x");
+    }
+
+    #[test]
+    fn test_ir_generation() {
+        let input = "let x = 5;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let instructions = ir_generator.instructions();
+        assert_eq!(instructions.len(), 1);
+        assert_eq!(
+            instructions[0],
+            crate::ir::Instruction::Load(
+                crate::ir::Operand::Register(0),
+                crate::ir::Operand::Immediate(5)
+            )
+        );
     }
 }

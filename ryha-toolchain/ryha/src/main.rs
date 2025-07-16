@@ -1,5 +1,6 @@
 // ryha-toolchain/ryha/src/main.rs
 
+use ryha::ir::IRGenerator;
 use ryha::lexer::Lexer;
 use ryha::parser::Parser;
 use ryha::semantic::SemanticAnalyzer;
@@ -35,5 +36,8 @@ fn main() {
         return;
     }
 
-    println!("{:#?}", program.statements);
+    let mut ir_generator = IRGenerator::new();
+    ir_generator.generate(&program);
+
+    println!("{:#?}", ir_generator.instructions());
 }
