@@ -7,6 +7,7 @@ use ryha::lexer::Lexer;
 use ryha::obfuscator::Obfuscator;
 use ryha::optimizer::Optimizer;
 use ryha::parser::Parser;
+use ryha::security::SecurityAnalyzer;
 use ryha::self_modifier::SelfModifier;
 use ryha::semantic::SemanticAnalyzer;
 use ryha::voice::VoiceCommandParser;
@@ -23,7 +24,7 @@ async fn main() {
         let voice_command_parser = VoiceCommandParser::new();
         let command = voice_command_parser.parse(&args[2]);
         if command == Some("build".to_string()) {
-            build(false);
+            build(false, false);
         } else if command == Some("improve security".to_string()) {
             let self_modifier = SelfModifier::new();
             self_modifier.improve_security();
@@ -41,13 +42,15 @@ async fn main() {
         let ide_path = std::env::var("CARGO_BIN_EXE_ide").unwrap();
         Command::new(ide_path).status().unwrap();
     } else if args.len() > 1 && args[1] == "--obfuscate" {
-        build(true);
+        build(true, false);
+    } else if args.len() > 1 && args[1] == "--secure-mode" {
+        build(false, true);
     } else {
-        build(false);
+        build(false, false);
     }
 }
 
-fn build(obfuscate: bool) {
+fn build(obfuscate: bool, secure_mode: bool) {
     let mut input = String::new();
     if io::stdin().read_to_string(&mut input).is_err() {
         eprintln!("Failed to read from stdin");
@@ -93,6 +96,18 @@ fn build(obfuscate: bool) {
 
     let mut codegen = CodeGenerator::new();
     codegen.generate(&instructions);
+
+    if secure_mode {
+        let mut security_analyzer = SecurityAnalyzer::new();
+        security_analyzer.analyze(&instructions);
+        if !security_analyzer.errors().is_empty() {
+            eprintln!("Security errors:");
+            for error in security_analyzer.errors() {
+                eprintln!("\t{}", error);
+            }
+            return;
+        }
+    }
 
     let mut asm_file = NamedTempFile::new().unwrap();
     asm_file.write_all(codegen.assembly().as_bytes()).unwrap();

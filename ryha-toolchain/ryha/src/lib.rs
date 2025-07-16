@@ -8,6 +8,7 @@ pub mod lexer;
 pub mod obfuscator;
 pub mod optimizer;
 pub mod parser;
+pub mod security;
 pub mod self_modifier;
 pub mod semantic;
 pub mod voice;
@@ -264,5 +265,20 @@ mod tests {
 
         let instructions = obfuscator.instructions();
         assert_eq!(instructions.len(), 1);
+    }
+
+    #[test]
+    fn test_security_analyzer() {
+        let instructions = vec![crate::ir::Instruction::Store(
+            crate::ir::Operand::Register(0),
+            crate::ir::Operand::Register(1),
+        )];
+        let mut analyzer = crate::security::SecurityAnalyzer::new();
+        analyzer.analyze(&instructions);
+        assert_eq!(analyzer.errors().len(), 1);
+        assert_eq!(
+            analyzer.errors()[0],
+            "potential buffer overflow at Register(0)"
+        );
     }
 }
