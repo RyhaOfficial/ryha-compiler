@@ -1,5 +1,6 @@
 // ryha-toolchain/ryha/src/main.rs
 
+use ryha::build_modes::BuildMode;
 use ryha::codegen::CodeGenerator;
 use ryha::gemini::GeminiClient;
 use ryha::ir::IRGenerator;
@@ -24,7 +25,7 @@ async fn main() {
         let voice_command_parser = VoiceCommandParser::new();
         let command = voice_command_parser.parse(&args[2]);
         if command == Some("build".to_string()) {
-            build(false, false);
+            build(None, false, false);
         } else if command == Some("improve security".to_string()) {
             let self_modifier = SelfModifier::new();
             self_modifier.improve_security();
@@ -42,15 +43,17 @@ async fn main() {
         let ide_path = std::env::var("CARGO_BIN_EXE_ide").unwrap();
         Command::new(ide_path).status().unwrap();
     } else if args.len() > 1 && args[1] == "--obfuscate" {
-        build(true, false);
+        build(None, true, false);
     } else if args.len() > 1 && args[1] == "--secure-mode" {
-        build(false, true);
+        build(None, false, true);
+    } else if args.len() > 1 && args[1] == "--defense" {
+        build(Some(BuildMode::Defense), false, false);
     } else {
-        build(false, false);
+        build(None, false, false);
     }
 }
 
-fn build(obfuscate: bool, secure_mode: bool) {
+fn build(build_mode: Option<BuildMode>, obfuscate: bool, secure_mode: bool) {
     let mut input = String::new();
     if io::stdin().read_to_string(&mut input).is_err() {
         eprintln!("Failed to read from stdin");
@@ -95,6 +98,9 @@ fn build(obfuscate: bool, secure_mode: bool) {
     };
 
     let mut codegen = CodeGenerator::new();
+    if let Some(build_mode) = build_mode {
+        codegen.set_build_mode(build_mode);
+    }
     codegen.generate(&instructions);
 
     if secure_mode {

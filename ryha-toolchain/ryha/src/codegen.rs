@@ -1,10 +1,12 @@
 // ryha-toolchain/ryha/src/codegen.rs
 
+use crate::build_modes::BuildMode;
 use std::collections::HashSet;
 
 pub struct CodeGenerator {
     assembly: String,
     used_registers: HashSet<u8>,
+    build_mode: Option<BuildMode>,
 }
 
 impl CodeGenerator {
@@ -12,7 +14,12 @@ impl CodeGenerator {
         CodeGenerator {
             assembly: String::new(),
             used_registers: HashSet::new(),
+            build_mode: None,
         }
+    }
+
+    pub fn set_build_mode(&mut self, build_mode: BuildMode) {
+        self.build_mode = Some(build_mode);
     }
 
     pub fn assembly(&self) -> &str {
@@ -22,6 +29,13 @@ impl CodeGenerator {
     pub fn generate(&mut self, instructions: &[crate::ir::Instruction]) {
         self.emit(".global main".to_string());
         self.emit("main:".to_string());
+
+        if self.build_mode == Some(BuildMode::Defense) {
+            self.emit("push rbp".to_string());
+            self.emit("mov rbp, rsp".to_string());
+            self.emit("sub rsp, 16".to_string());
+            self.emit("mov [rbp - 8], 0xdeadbeef".to_string());
+        }
 
         let mut used_regs: Vec<u8> = self.used_registers.iter().cloned().collect();
         used_regs.sort();
@@ -36,6 +50,17 @@ impl CodeGenerator {
 
         for reg in used_regs.iter().rev() {
             self.emit(format!("pop r{}", 12 + reg));
+        }
+
+        if self.build_mode == Some(BuildMode::Defense) {
+            self.emit("mov rax, [rbp - 8]".to_string());
+            self.emit("cmp rax, 0xdeadbeef".to_string());
+            self.emit("jne .L_stack_smashing_detected".to_string());
+            self.emit("mov rsp, rbp".to_string());
+            self.emit("pop rbp".to_string());
+            self.emit("ret".to_string());
+            self.emit(".L_stack_smashing_detected:".to_string());
+            self.emit("ud2".to_string());
         }
     }
 

@@ -1,6 +1,7 @@
 // ryha-toolchain/ryha/src/lib.rs
 
 pub mod ast;
+pub mod build_modes;
 pub mod codegen;
 pub mod gemini;
 pub mod ir;
@@ -280,5 +281,34 @@ mod tests {
             analyzer.errors()[0],
             "potential buffer overflow at Register(0)"
         );
+    }
+
+    #[test]
+    fn test_defense_mode() {
+        let input = "return 5;";
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program();
+
+        let mut ir_generator = crate::ir::IRGenerator::new();
+        ir_generator.generate(&program);
+
+        let mut codegen = crate::codegen::CodeGenerator::new();
+        codegen.set_build_mode(crate::build_modes::BuildMode::Defense);
+        codegen.generate(ir_generator.instructions());
+
+        let assembly = codegen.assembly();
+        assert!(assembly.contains("push rbp"));
+        assert!(assembly.contains("mov rbp, rsp"));
+        assert!(assembly.contains("sub rsp, 16"));
+        assert!(assembly.contains("mov [rbp - 8], 0xdeadbeef"));
+        assert!(assembly.contains("mov rax, [rbp - 8]"));
+        assert!(assembly.contains("cmp rax, 0xdeadbeef"));
+        assert!(assembly.contains("jne .L_stack_smashing_detected"));
+        assert!(assembly.contains("mov rsp, rbp"));
+        assert!(assembly.contains("pop rbp"));
+        assert!(assembly.contains("ret"));
+        assert!(assembly.contains(".L_stack_smashing_detected:"));
+        assert!(assembly.contains("ud2"));
     }
 }
